@@ -5,7 +5,8 @@ hasNextPage=true
 
 while [ "$hasNextPage" = true ]
 do
-    output=$(gh api graphql -f enterpriseName='enterpriseSlug' -f afterCursor="$endCursor" -f query='
+    echo "Fetching page..."
+    output=$(gh api graphql -f enterpriseName='banco-popular' -f afterCursor="$endCursor" -f query='
     query getEnterpriseIpAllowList($enterpriseName: String! $endCursor: String) {
       enterprise(slug: $enterpriseName) {
         ownerInfo {
@@ -31,12 +32,15 @@ do
     endCursor=$(echo $output | jq -r '.data.enterprise.ownerInfo.ipAllowListEntries.pageInfo.endCursor')
     hasNextPage=$(echo $output | jq -r '.data.enterprise.ownerInfo.ipAllowListEntries.pageInfo.hasNextPage')
 
+    echo "Processing $length entries on this page..."
+
     for (( i=0; i<$length; i++ ))
     do
       isActive=$(echo $output | jq -r ".data.enterprise.ownerInfo.ipAllowListEntries.nodes[$i].isActive")
       
       if [ "$isActive" = "false" ]
       then
+        echo "Updating entry $i..."
         allowListValue=$(echo $output | jq -r ".data.enterprise.ownerInfo.ipAllowListEntries.nodes[$i].allowListValue")
         entry_id=$(echo $output | jq -r ".data.enterprise.ownerInfo.ipAllowListEntries.nodes[$i].id")
         name=$(echo $output | jq -r ".data.enterprise.ownerInfo.ipAllowListEntries.nodes[$i].name")
@@ -53,6 +57,7 @@ do
            } 
         }'
 
+        echo "Updated entry $i, sleeping for 5 seconds..."
         sleep 5
       fi
     done
