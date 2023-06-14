@@ -5,7 +5,7 @@ hasNextPage=true
 
 while [ "$hasNextPage" = true ]
 do
-    output=$(gh api graphql -f enterpriseName='banco-popular' -f afterCursor="$endCursor" -f query='
+    output=$(gh api graphql -f enterpriseName='enterpriseSlug' -f afterCursor="$endCursor" -f query='
     query getEnterpriseIpAllowList($enterpriseName: String! $endCursor: String) {
       enterprise(slug: $enterpriseName) {
         ownerInfo {
